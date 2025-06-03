@@ -1,10 +1,11 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import ttk, messagebox
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import os
 import sys
+from tkinter import font as tkfont
 
 
 def get_base_path():
@@ -13,11 +14,12 @@ def get_base_path():
     else:
         return os.path.dirname(os.path.abspath(__file__))
 
+
 def load_signal_file():
     try:
         signal_path = os.path.join(get_base_path(), "signal.txt")
         with open(signal_path, "r") as f:
-            lines = f.readlines()[1:]  # skip header
+            lines = f.readlines()[1:]
             x_vals, y_vals = [], []
             for line in lines:
                 t_val, y_val = map(float, line.strip().split(','))
@@ -27,7 +29,6 @@ def load_signal_file():
     except Exception as e:
         messagebox.showerror("Xəta", f"Fayl oxunarkən xəta baş verdi:\n\n{e}")
         return None, None
-
 
 
 def calculate_fourier(x, y, omega_0, nmax=10):
@@ -53,11 +54,11 @@ def reconstruct_signal(x, a0, an, bn, omega_0):
 
 
 def show_plot(x, y_original, y_approx):
-    fig = plt.Figure(figsize=(6, 4), dpi=100)
+    fig = plt.Figure(figsize=(7, 5.2), dpi=100)
     ax = fig.add_subplot(111)
-    ax.plot(x, y_original, label="Orijinal Siqnal")
-    ax.plot(x, y_approx, label="Fourier Təqribi", linestyle="--")
-    ax.set_title("Harmonik Siqnal")
+    ax.plot(x, y_original, label="Orijinal Siqnal", color="blue", linewidth=2)
+    ax.plot(x, y_approx, label="Fourier Təqribi", linestyle="--", color="orange", linewidth=2)
+    ax.set_title("Harmonik Siqnal", fontsize=14)
     ax.set_xlabel("x")
     ax.set_ylabel("f(x)")
     ax.grid(True)
@@ -66,65 +67,81 @@ def show_plot(x, y_original, y_approx):
     if hasattr(show_plot, 'canvas') and show_plot.canvas:
         show_plot.canvas.get_tk_widget().destroy()
 
-    show_plot.canvas = FigureCanvasTkAgg(fig, master=plot_frame)
+    show_plot.canvas = FigureCanvasTkAgg(fig, master=right_frame)
     show_plot.canvas.draw()
-    show_plot.canvas.get_tk_widget().pack()
+    show_plot.canvas.get_tk_widget().pack(fill="both", expand=True)
 
 
 def on_omega_change(*args):
     omega_str = omega_var.get()
     if not omega_str:
-        result_label.config(text="Omega₀ daxil edin.")
         return
     try:
         omega_0 = float(omega_str)
         if omega_0 <= 0:
             raise ValueError("Omega₀ müsbət olmalıdır.")
     except Exception as e:
-        result_label.config(text=f"Xəta: {e}")
         return
 
     x, y = load_signal_file()
     if x is None or y is None:
-        result_label.config(text="Siqnal faylı oxunmadı.")
         return
 
     a0, an, bn = calculate_fourier(x, y, omega_0)
-    text = f"a₀ = {a0:.6f}\n"
+    table.delete(*table.get_children())
+    table.insert("", "end", values=("a₀", f"{a0:.6f}", "-"))
     for i in range(len(an)):
-        text += f"a{i+1} = {an[i]:.6f},  b{i+1} = {bn[i]:.6f}\n"
-    result_label.config(text=text)
+        table.insert("", "end", values=(f"{i+1}", f"{an[i]:.6f}", f"{bn[i]:.6f}"))
 
     y_approx = reconstruct_signal(x, a0, an, bn, omega_0)
     show_plot(x, y, y_approx)
 
 
 def create_gui():
-    global omega_var, result_label, plot_frame
+    global omega_var, table, right_frame
 
-    window = tk.Tk()
-    window.title("Furye Analizi, Proqramcı: Nahid Məmmədov")
+    ctk.set_appearance_mode("light")
+    ctk.set_default_color_theme("blue")
 
-    # Yeni label hissəsi (iki hissəyə bölünmüş)
-    frame_label = tk.Frame(window)
-    frame_label.pack(pady=5)
+    window = ctk.CTk()
+    window.title("Fourier Analizi, Proqramçı: Nahid Məmmədov")
+    window.geometry("1100x650")
 
-    label_bold = tk.Label(frame_label, text="Omega₀", font=("Arial", 12, "bold"))
-    label_bold.pack(side="left")
+    top_frame = ctk.CTkFrame(window)
+    top_frame.pack(pady=10, fill="x")
 
-    label_normal = tk.Label(frame_label, text=" dəyərini daxil edin:", font=("Arial", 12))
-    label_normal.pack(side="left")
+    omega_label = ctk.CTkLabel(top_frame, text="Omega₀ dəyərini daxil edin:", font=("Arial", 16))
+    omega_label.pack(side="left", padx=10)
 
-    omega_var = tk.StringVar()
+    omega_var = ctk.StringVar()
     omega_var.trace_add("write", on_omega_change)
-    omega_entry = ttk.Entry(window, textvariable=omega_var)
-    omega_entry.pack(pady=5)
 
-    result_label = tk.Label(window, text="Nəticələr burada göstəriləcək", font=("Arial", 12), justify="left")
-    result_label.pack(pady=10)
+    omega_entry = ctk.CTkEntry(top_frame, textvariable=omega_var, width=150, font=("Arial", 16))
+    omega_entry.pack(side="left")
 
-    plot_frame = tk.Frame(window)
-    plot_frame.pack(pady=10)
+    content_frame = ctk.CTkFrame(window)
+    content_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+    # Sol: Table üçün
+    left_frame = ctk.CTkFrame(content_frame)
+    left_frame.pack(side="left", fill="y", padx=10)
+
+    style = ttk.Style()
+    style.configure("Treeview.Heading", font=("Arial", 14, "bold"))
+    style.configure("Treeview", font=("Arial", 13), rowheight=28)
+
+    table = ttk.Treeview(left_frame, columns=("n", "aₙ", "bₙ"), show="headings", height=22)
+    table.heading("n", text="n")
+    table.heading("aₙ", text="aₙ")
+    table.heading("bₙ", text="bₙ")
+    table.column("n", width=60, anchor="center")
+    table.column("aₙ", width=120, anchor="center")
+    table.column("bₙ", width=120, anchor="center")
+    table.pack(padx=5, pady=5)
+
+    # Sağ: Qrafik üçün
+    right_frame = ctk.CTkFrame(content_frame)
+    right_frame.pack(side="right", fill="both", expand=True)
 
     window.mainloop()
 
