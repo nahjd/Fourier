@@ -76,15 +76,19 @@ class FourierApp:
 
         self.a0_entry = add_labeled_entry(1, "a0:", default="0")
         self.w0_entry = add_labeled_entry(2, "ω0:", default="1")
+
+        self.a_entries = []
+        self.b_entries = []
+        self.labels = []
+
+
         self.n_max_var = StringVar()
         self.n_max_var.trace_add("write", self.update_entries_live)
         self.n_max_entry = add_labeled_entry(3, "n_max:", self.n_max_var, default="1")
         self.n_var = StringVar()
         self.n_entry = add_labeled_entry(4, "N:", self.n_var, default="1000")
 
-        self.a_entries = []
-        self.b_entries = []
-        self.labels = []
+   
 
         self.plot_frame = Frame(right_frame, bg="#2e2e2e")
         self.plot_frame.pack(fill=BOTH, expand=True)
