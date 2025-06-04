@@ -30,7 +30,6 @@ class FourierApp:
 
         self.settings_file_path = get_settings_file_path()
 
-        # Main layout
         main_frame = Frame(root, bg="#2e2e2e")
         main_frame.pack(fill=BOTH, expand=True)
 
@@ -40,7 +39,6 @@ class FourierApp:
         right_frame = Frame(main_frame, bg="#2e2e2e")
         right_frame.pack(side=RIGHT, fill=BOTH, expand=True)
 
-        # Scrollable inputs
         canvas = Canvas(left_frame, bg="#2e2e2e", highlightthickness=0)
         scrollbar = Scrollbar(left_frame, orient=VERTICAL, command=canvas.yview)
         self.scrollable_frame = Frame(canvas, bg="#2e2e2e")
@@ -61,7 +59,6 @@ class FourierApp:
 
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
-        # Fonts & colors
         label_font = ("Arial", 12, "bold")
         entry_font = ("Arial", 12)
 
@@ -191,15 +188,15 @@ class FourierApp:
     def plot_fourier(self, x, y):
         fig = plt.Figure(figsize=(6, 4), dpi=100)
         ax = fig.add_subplot(111)
-        ax.plot(x, y, label="Harmonik Siqnal", color='cyan')
+        ax.plot(x, y, color='cyan')
         ax.set_facecolor("#1e1e1e")
         fig.patch.set_facecolor('#2e2e2e')
-        ax.set_title("Harmonik Siqnal", color='white')
+        ax.set_title(" Siqnal", color='white')
         ax.set_xlabel("x", color='white')
         ax.set_ylabel("f(x)", color='white')
         ax.tick_params(colors='white')
         ax.grid(True, color='gray')
-        ax.legend(facecolor="#2e2e2e", edgecolor="gray", labelcolor="white")
+        # ax.legend(facecolor="#2e2e2e", edgecolor="gray", labelcolor="white")
 
         if self.canvas:
             self.canvas.get_tk_widget().destroy()
@@ -246,14 +243,14 @@ class FourierApp:
                 "n_max": n_max,
                 "N": int(self.n_entry.get()),
                 "a": [float(e.get()) for e in self.a_entries[:n_max]],
-                "b": [float(e.get()) for e in self.b_entries[:n_max]],
+                "b": [float(e.get()) for e in self.b_entries[:n_max]]
             }
             with open(self.settings_file_path, "w") as f:
                 json.dump(data, f, indent=4)
         except Exception as e:
-            print("Ayarlar saxlanılarkən xəta:", e)
+            print("Ayarlar saxlanarkən xəta:", e)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     root = Tk()
     app = FourierApp(root)
     root.mainloop()

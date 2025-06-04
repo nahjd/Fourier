@@ -58,7 +58,7 @@ def show_plot(x, y_original, y_approx):
     ax = fig.add_subplot(111)
     ax.plot(x, y_original, label="Orijinal Siqnal", color="blue", linewidth=2)
     ax.plot(x, y_approx, label="Fourier Təqribi", linestyle="--", color="orange", linewidth=2)
-    ax.set_title("Harmonik Siqnal", fontsize=14)
+    ax.set_title(" Siqnal", fontsize=14)
     ax.set_xlabel("x")
     ax.set_ylabel("f(x)")
     ax.grid(True)
