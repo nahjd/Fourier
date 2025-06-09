@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import os
 import sys
-from tkinter import font as tkfont
 
 
 def get_base_path():
@@ -18,8 +17,15 @@ def get_base_path():
 def load_signal_file():
     try:
         signal_path = os.path.join(get_base_path(), "signal.txt")
+        if not os.path.exists(signal_path):
+            messagebox.showerror("Xəta", "signal.txt faylı mövcud deyil!")
+            return None, None
+
         with open(signal_path, "r") as f:
-            lines = f.readlines()[1:]
+            lines = f.readlines()
+            if lines[0].startswith("t") or lines[0].startswith("#"):
+                lines = lines[1:]
+
             x_vals, y_vals = [], []
             for line in lines:
                 t_val, y_val = map(float, line.strip().split(','))
@@ -74,22 +80,33 @@ def show_plot(x, y_original, y_approx):
 
 def on_omega_change(*args):
     omega_str = omega_var.get()
-    if not omega_str:
+    nmax_str = nmax_var.get()
+    if omega_str.strip() == "" or nmax_str.strip() == "":
         return
+
     try:
         omega_0 = float(omega_str)
-        if omega_0 <= 0:
-            raise ValueError("Omega₀ müsbət olmalıdır.")
-    except Exception as e:
+        if omega_0 < 0:
+            raise ValueError
+    except:
+        messagebox.showerror("Xəta", "Omega₀ müsbət ədəddən ibarət olmalıdır!")
+        return
+
+    try:
+        nmax = int(nmax_str)
+        if nmax <= 0:
+            raise ValueError
+    except:
+        messagebox.showerror("Xəta", "Əmsal sayı (n) müsbət tam ədəd olmalıdır!")
         return
 
     x, y = load_signal_file()
     if x is None or y is None:
         return
 
-    a0, an, bn = calculate_fourier(x, y, omega_0)
+    a0, an, bn = calculate_fourier(x, y, omega_0, nmax)
     table.delete(*table.get_children())
-    table.insert("", "end", values=("a₀", f"{a0:.6f}", "-"))
+    table.insert("", "end", values=("a₀/2", f"{a0 / 2:.6f}", "-"))
     for i in range(len(an)):
         table.insert("", "end", values=(f"{i+1}", f"{an[i]:.6f}", f"{bn[i]:.6f}"))
 
@@ -98,7 +115,7 @@ def on_omega_change(*args):
 
 
 def create_gui():
-    global omega_var, table, right_frame
+    global omega_var, nmax_var, table, right_frame
 
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
@@ -110,19 +127,25 @@ def create_gui():
     top_frame = ctk.CTkFrame(window)
     top_frame.pack(pady=10, fill="x")
 
-    omega_label = ctk.CTkLabel(top_frame, text="Omega₀ dəyərini daxil edin:", font=("Arial", 16))
-    omega_label.pack(side="left", padx=10)
+    omega_label = ctk.CTkLabel(top_frame, text="Omega₀ dəyəri:", font=("Arial", 16))
+    omega_label.pack(side="left", padx=(10, 2))
 
     omega_var = ctk.StringVar()
     omega_var.trace_add("write", on_omega_change)
 
-    omega_entry = ctk.CTkEntry(top_frame, textvariable=omega_var, width=150, font=("Arial", 16))
+    omega_entry = ctk.CTkEntry(top_frame, textvariable=omega_var, width=100, font=("Arial", 16))
     omega_entry.pack(side="left")
+
+    n_label = ctk.CTkLabel(top_frame, text="Əmsal sayı (n):", font=("Arial", 16))
+    n_label.pack(side="left", padx=(20, 2))
+
+    nmax_var = ctk.StringVar(value="10")
+    nmax_entry = ctk.CTkEntry(top_frame, textvariable=nmax_var, width=60, font=("Arial", 16))
+    nmax_entry.pack(side="left")
 
     content_frame = ctk.CTkFrame(window)
     content_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-    # Sol: Table üçün
     left_frame = ctk.CTkFrame(content_frame)
     left_frame.pack(side="left", fill="y", padx=10)
 
@@ -139,7 +162,6 @@ def create_gui():
     table.column("bₙ", width=120, anchor="center")
     table.pack(padx=5, pady=5)
 
-    # Sağ: Qrafik üçün
     right_frame = ctk.CTkFrame(content_frame)
     right_frame.pack(side="right", fill="both", expand=True)
 
