@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from scipy.integrate import trapezoid
 import os
 import sys
 
@@ -39,14 +40,14 @@ def load_signal_file():
 
 def calculate_fourier(x, y, omega_0, nmax=10):
     T = x[-1] - x[0]
-    a0 = (2 / T) * np.trapz(y, x)
+    a0 = (2 / T) * np.trapezoid(y, x)
     an = []
     bn = []
     for n in range(1, nmax + 1):
         cos_term = np.cos(n * omega_0 * x)
         sin_term = np.sin(n * omega_0 * x)
-        a_n = (2 / T) * np.trapz(y * cos_term, x)
-        b_n = (2 / T) * np.trapz(y * sin_term, x)
+        a_n = (2 / T) * np.trapezoid(y * cos_term, x)
+        b_n = (2 / T) * np.trapezoid(y * sin_term, x)
         an.append(a_n)
         bn.append(b_n)
     return a0, an, bn
